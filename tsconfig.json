@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "target": "ES6", // Output JavaScript version (ES6 = modern JS)
+        "module": "ES6", // Module system (use "ESNext" for modern ESM)
+        "strict": true, // Enables all strict type-checking options
+        "esModuleInterop": true, // Allows default import from CommonJS modules
+        "forceConsistentCasingInFileNames": true, // Ensures file name casing matches imports
+        "skipLibCheck": true, // Skips type checking of declaration files (*.d.ts)
+        "outDir": "./dist", // Output folder for compiled JS
+        "rootDir": "./src" // Source folder for TS
+    },
+    "include": [
+        "src"
+    ], // Files to include
+}
