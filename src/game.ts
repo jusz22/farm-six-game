@@ -1,4 +1,4 @@
-import { SPRITE_64, Hex, TileVariant } from "./sprites.js";
+import { SPRITE_64, Hex, TileVariant, SPRITE_96 } from "./sprites.js";
 import { Vector } from "./vector.js";
 
 const canvas = document.getElementById("game") as HTMLCanvasElement;
@@ -12,6 +12,7 @@ class Game {
   lastPos: null | Vector;
   screenOffset: Vector;
   hexes: Hex[];
+  scale: number;
 
   constructor(ctx: CanvasRenderingContext2D) {
     this.ctx = ctx;
@@ -39,19 +40,24 @@ class Game {
       if (this.lastPos === null) return;
 
       const mouseMoveVector = new Vector(e.x, e.y);
-      this.screenOffset = this.screenOffset.add(
-        mouseMoveVector.sub(this.lastPos)
+      this.screenOffset = this.screenOffset.vAdd(
+        mouseMoveVector.vSub(this.lastPos)
       );
       this.lastPos = mouseMoveVector;
     });
 
+    canvas.addEventListener("wheel", (e: WheelEvent) => {
+      this.zoom(e);
+    });
+
+    this.scale = 1;
     this.resize();
     this.sprites = new Image();
     this.sprites.src = "./sprites/sprites.png";
 
     this.hexes = [
       {
-        point: new Vector(1, 1),
+        point: new Vector(0, 0),
         variant: TileVariant.Dry,
       },
       {
@@ -80,6 +86,11 @@ class Game {
       },
     ];
   }
+  zoom(e: WheelEvent) {
+    e.preventDefault();
+    this.scale += e.deltaY * -0.01;
+    this.scale = Math.min(Math.max(1, this.scale), 4);
+  }
 
   hexToPixel(hex: Hex) {
     const sprite = this.getSprite(hex)!;
@@ -87,25 +98,39 @@ class Game {
     const y = (sprite.size.y * 3 * hex.point.y) / 4;
     return new Vector(x, y);
   }
+
   getSprite(hex: Hex) {
-    return SPRITE_64.tiles[hex.variant];
+    if (this.scale & 1) {
+      return SPRITE_64.tiles[hex.variant];
+    }
+    return SPRITE_96.tiles[hex.variant];
   }
 
   drawHexes(hexes: Hex[]) {
     for (const hex of hexes) {
       const sprite = this.getSprite(hex);
       if (!sprite) return;
-      const screenCoords = this.hexToPixel(hex).round().add(this.screenOffset);
+      const drawingScale = Math.floor((this.scale - 1) / 2) + 1;
+      const screenCoords = this.hexToPixel(hex)
+        .round()
+        .vAdd(this.screenOffset.div(drawingScale));
+
+      const startCoords = screenCoords
+        .mul(drawingScale)
+        .vSub(sprite.size.mul(drawingScale));
+
+      const dSize = sprite.sourceSize.mul(drawingScale);
+      this.ctx.imageSmoothingEnabled = false;
       this.ctx.drawImage(
         this.sprites,
         sprite.start.x,
         sprite.start.y,
         sprite.sourceSize.x,
         sprite.sourceSize.y,
-        screenCoords.x,
-        screenCoords.y,
-        sprite.sourceSize.x,
-        sprite.sourceSize.y
+        startCoords.x,
+        startCoords.y,
+        dSize.x,
+        dSize.y
       );
     }
   }

@@ -45,13 +45,13 @@ export const SPRITE_64: Sprites = {
 
 export const SPRITE_96: Sprites = {
   tiles: {
-    [TileVariant.Watered]: {
+    [TileVariant.Dry]: {
       start: new Vector(64, 0),
       size: new Vector(96, 56),
       sourceSize: new Vector(96, 64),
       offset: new Vector(-48, -28),
     },
-    [TileVariant.Dry]: {
+    [TileVariant.Watered]: {
       start: new Vector(64, 64),
       size: new Vector(96, 56),
       sourceSize: new Vector(96, 64),

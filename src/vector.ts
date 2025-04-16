@@ -19,11 +19,23 @@ export class Vector {
     return this;
   }
 
-  add(v: Vector) {
+  vAdd(v: Vector) {
     return new Vector(this.x + v.x, this.y + v.y);
   }
 
-  sub(v: Vector) {
+  vSub(v: Vector) {
     return new Vector(this.x - v.x, this.y - v.y);
+  }
+
+  sub(n: number) {
+    return new Vector(this.x - n, this.y - n);
+  }
+
+  mul(m: number) {
+    return new Vector(this.x * m, this.y * m);
+  }
+
+  div(d: number) {
+    return new Vector(this.x / d, this.y / d);
   }
 }
