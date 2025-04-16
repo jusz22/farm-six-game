@@ -1,4 +1,4 @@
-import { SPRITE_64, Hex } from "./sprites.js";
+import { SPRITE_64, Hex, TileVariant } from "./sprites.js";
 import { Vector } from "./vector.js";
 
 const canvas = document.getElementById("game") as HTMLCanvasElement;
@@ -50,35 +50,62 @@ class Game {
     this.sprites.src = "./sprites/sprites.png";
 
     this.hexes = [
-      { x: 1, y: 1, sprite: SPRITE_64.tiles[1] },
-      { x: 1, y: 2, sprite: SPRITE_64.tiles[1] },
-      { x: 2, y: 1, sprite: SPRITE_64.tiles[1] },
-      { x: 2, y: 2, sprite: SPRITE_64.tiles[1] },
-      { x: 1, y: 3, sprite: SPRITE_64.tiles[1] },
-      { x: 2, y: 4, sprite: SPRITE_64.tiles[1] },
-      { x: 6, y: 6, sprite: SPRITE_64.tiles[1] },
+      {
+        point: new Vector(1, 1),
+        variant: TileVariant.Dry,
+      },
+      {
+        point: new Vector(1, 2),
+        variant: TileVariant.Dry,
+      },
+      {
+        point: new Vector(2, 1),
+        variant: TileVariant.Dry,
+      },
+      {
+        point: new Vector(2, 2),
+        variant: TileVariant.Dry,
+      },
+      {
+        point: new Vector(1, 3),
+        variant: TileVariant.Dry,
+      },
+      {
+        point: new Vector(2, 4),
+        variant: TileVariant.Dry,
+      },
+      {
+        point: new Vector(6, 6),
+        variant: TileVariant.Dry,
+      },
     ];
   }
 
   hexToPixel(hex: Hex) {
-    const x = hex.sprite.size.x * (hex.x + 0.5 * (hex.y & 1));
-    const y = (hex.sprite.size.y * 3 * hex.y) / 4;
+    const sprite = this.getSprite(hex)!;
+    const x = sprite.size.x * (hex.point.x + 0.5 * (hex.point.y & 1));
+    const y = (sprite.size.y * 3 * hex.point.y) / 4;
     return new Vector(x, y);
+  }
+  getSprite(hex: Hex) {
+    return SPRITE_64.tiles[hex.variant];
   }
 
   drawHexes(hexes: Hex[]) {
     for (const hex of hexes) {
+      const sprite = this.getSprite(hex);
+      if (!sprite) return;
       const screenCoords = this.hexToPixel(hex).round().add(this.screenOffset);
       this.ctx.drawImage(
         this.sprites,
-        hex.sprite.start.x,
-        hex.sprite.start.y,
-        hex.sprite.sourceSize.x,
-        hex.sprite.sourceSize.y,
+        sprite.start.x,
+        sprite.start.y,
+        sprite.sourceSize.x,
+        sprite.sourceSize.y,
         screenCoords.x,
         screenCoords.y,
-        hex.sprite.sourceSize.x,
-        hex.sprite.sourceSize.y
+        sprite.sourceSize.x,
+        sprite.sourceSize.y
       );
     }
   }
