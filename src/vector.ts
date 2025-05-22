@@ -6,6 +6,9 @@ export class Vector {
     this.x = x;
     this.y = y;
   }
+  equals(other: Vector) {
+    return this.x == other.x && this.y == other.y;
+  }
 
   round() {
     this.x = Math.round(this.x);

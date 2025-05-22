@@ -19,7 +19,7 @@ class Game {
     this.canvas = ctx.canvas;
     this.isMouseDown = false;
     this.lastPos = null;
-    this.screenOffset = new Vector(0, 0);
+    this.screenOffset = new Vector(500, 300);
 
     window.addEventListener("resize", () => {
       this.resize();
@@ -28,6 +28,7 @@ class Game {
     canvas.addEventListener("mousedown", (e: MouseEvent) => {
       this.isMouseDown = true;
       this.lastPos = new Vector(e.x, e.y);
+      this.changeHexVariant(e);
     });
 
     canvas.addEventListener("mouseup", () => {
@@ -61,6 +62,30 @@ class Game {
         variant: TileVariant.Dry,
       },
       {
+        point: new Vector(1, 0),
+        variant: TileVariant.Dry,
+      },
+      {
+        point: new Vector(3, 0),
+        variant: TileVariant.Dry,
+      },
+      {
+        point: new Vector(2, 0),
+        variant: TileVariant.Dry,
+      },
+      {
+        point: new Vector(0, 1),
+        variant: TileVariant.Dry,
+      },
+      {
+        point: new Vector(0, 2),
+        variant: TileVariant.Dry,
+      },
+      {
+        point: new Vector(1, 1),
+        variant: TileVariant.Dry,
+      },
+      {
         point: new Vector(1, 2),
         variant: TileVariant.Dry,
       },
@@ -73,19 +98,43 @@ class Game {
         variant: TileVariant.Dry,
       },
       {
-        point: new Vector(1, 3),
+        point: new Vector(4, 0),
         variant: TileVariant.Dry,
       },
       {
-        point: new Vector(2, 4),
+        point: new Vector(3, 1),
         variant: TileVariant.Dry,
       },
       {
-        point: new Vector(6, 6),
+        point: new Vector(6, 7),
         variant: TileVariant.Dry,
       },
     ];
   }
+
+  changeHexVariant(e: MouseEvent) {
+    const hexDrawingScale = Math.floor((this.scale - 1) / 2) + 1;
+    let sprite;
+    if (this.scale % 2 === 1) {
+      sprite = SPRITE_64.tiles[TileVariant.Watered];
+    } else {
+      sprite = SPRITE_96.tiles[TileVariant.Watered];
+    }
+    const spriteSize = sprite!.size.mul(hexDrawingScale);
+    const hexToChange = this.hexes.findIndex((obj) =>
+      obj.point.equals(
+        this.pixelToHex(new Vector(e.x, e.y), spriteSize.x, spriteSize.y)
+      )
+    );
+    if (hexToChange !== -1) {
+      if (this.hexes[hexToChange].variant === TileVariant.Watered) {
+        this.hexes[hexToChange].variant = TileVariant.Dry;
+      } else {
+        this.hexes[hexToChange].variant = TileVariant.Watered;
+      }
+    }
+  }
+
   zoom(e: WheelEvent) {
     e.preventDefault();
     this.scale += e.deltaY * -0.01;
@@ -99,6 +148,43 @@ class Game {
     return new Vector(x, y);
   }
 
+  pixelToHex(pixel: Vector, spriteSizeX: number, spriteSizeY: number) {
+    const globalPos = pixel.vSub(this.screenOffset);
+
+    const xStep = spriteSizeX;
+    const yStep = (spriteSizeY * 3) / 4;
+
+    const xRel = globalPos.x - spriteSizeX / 2;
+    const yRel = globalPos.y - spriteSizeY / 2;
+
+    const ar = yRel / yStep;
+    const aq = xRel / xStep - 0.5 * ar;
+
+    const cr = ar;
+    const cq = aq;
+    const cs = -ar - aq;
+
+    let RoundedQ = Math.round(cq);
+    let RoundedR = Math.round(cr);
+    let RoundedS = Math.round(cs);
+
+    const diffQ = Math.abs(RoundedQ - cq);
+    const diffR = Math.abs(RoundedR - cr);
+    const diffS = Math.abs(RoundedS - cs);
+
+    if (diffQ > diffS && diffQ > diffR) {
+      RoundedQ = -RoundedR - RoundedS;
+    } else if (diffS > diffR) {
+      RoundedS = -RoundedQ - RoundedR;
+    } else {
+      RoundedR = -RoundedQ - RoundedS;
+    }
+    const finalY = RoundedR;
+    const finalX = RoundedQ + Math.floor((RoundedR - (RoundedR & 1)) / 2);
+
+    return new Vector(finalX, finalY);
+  }
+
   getSprite(hex: Hex) {
     if (this.scale & 1) {
       return SPRITE_64.tiles[hex.variant];
@@ -110,16 +196,14 @@ class Game {
     for (const hex of hexes) {
       const sprite = this.getSprite(hex);
       if (!sprite) return;
-      const drawingScale = Math.floor((this.scale - 1) / 2) + 1;
+      const hexDrawingScale = Math.floor((this.scale - 1) / 2) + 1;
       const screenCoords = this.hexToPixel(hex)
         .round()
-        .vAdd(this.screenOffset.div(drawingScale));
+        .vAdd(this.screenOffset.div(hexDrawingScale));
 
-      const startCoords = screenCoords
-        .mul(drawingScale)
-        .vSub(sprite.size.mul(drawingScale));
+      const startCoords = screenCoords.mul(hexDrawingScale);
 
-      const dSize = sprite.sourceSize.mul(drawingScale);
+      const dSize = sprite.sourceSize.mul(hexDrawingScale);
       this.ctx.imageSmoothingEnabled = false;
       this.ctx.drawImage(
         this.sprites,
